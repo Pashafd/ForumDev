@@ -1,4 +1,4 @@
-import { express } from "../../server";
+import express from "express";
 const router = express.Router();
 // @route       GET api/auth
 // @desc        Text route

@@ -1,10 +1,19 @@
-export const express = require("express");
+import express from "express";
 import { connectDB } from "../config/db";
+
+const app = express();
+express.json({});
 
 // Connect DB
 connectDB();
 
-const app = express();
+// Init Middleware
+app.use(express.json());
+app.use(
+    express.urlencoded({
+        extended: true,
+    })
+);
 
 app.get("/", (req, res) => res.send("API Running"));
 

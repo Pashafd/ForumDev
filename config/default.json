@@ -1,3 +1,4 @@
 {
-    "mongoURI": "mongodb+srv://Pashafd:TX4c4amjpA5UQY5@forumdev.vcdem.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+    "mongoURI": "mongodb+srv://Pashafd:TX4c4amjpA5UQY5@forumdev.vcdem.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+    "jwtToken": "superSecretToken1408"
 }
