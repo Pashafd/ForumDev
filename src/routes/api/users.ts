@@ -1,17 +1,13 @@
 import express from "express";
 import { check, validationResult } from "express-validator";
-import { User } from "../../modules/User";
+import { User } from "../../model/User";
 import gravatar from "gravatar";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "config";
+import { IUserRegistrationRequest } from "../../types/usersTypes";
 
 const router = express.Router();
-export interface IUserRegistrationRequest {
-    name: string;
-    email: string;
-    password: string;
-}
 
 // @route       POST api/users
 // @desc        Registry user
