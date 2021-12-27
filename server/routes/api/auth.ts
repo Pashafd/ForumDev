@@ -1,11 +1,11 @@
 import express from "express";
-import { User } from "../../models/User";
-import { check, validationResult } from "express-validator";
-import jwt from "jsonwebtoken";
-import config from "config";
 import bcrypt from "bcryptjs";
-import { IUserInfo } from "../../types/usersTypes";
+import { check, validationResult } from "express-validator";
+import config from "config";
+import jwt from "jsonwebtoken";
 import auth from "../../middleware/auth";
+import { IUserInfo } from "../../types/usersTypes";
+import { User } from "../../models/User";
 import { IAuthRequest } from "../../types/authTypes";
 
 const router = express.Router();
