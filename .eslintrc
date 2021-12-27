@@ -1,0 +1,31 @@
+{
+    "root":true,
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "tsx": true
+        }
+    },
+    "rules":{
+        "indent": ["error", 4, { 
+            "SwitchCase": 1,
+            "VariableDeclarator": 2,
+            "outerIIFEBody": 0,
+            "MemberExpression": 1,
+            "offsetTernaryExpressions": true
+        }],
+        "@typescript-eslint/ban-ts-comment": 0,
+        "@typescript-eslint/no-explicit-any": 0,
+        "skipComments": 0
+    },
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ]
+}

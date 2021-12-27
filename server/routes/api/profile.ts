@@ -4,8 +4,7 @@ import express from "express";
 import auth from "../../middleware/auth";
 
 import { Profile } from "../../models/Profile";
-import { User } from "../../models/User";
-import { ICreateProfileRequest, IUserProfile } from "../../types/profileTypes";
+import { ICreateProfileRequest } from "../../types/profileTypes";
 
 const router = express.Router();
 
