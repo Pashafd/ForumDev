@@ -19,3 +19,4 @@ export default function (req: IMiddlewareAuthRequest, res: express.Response, nex
         res.status(401).json({ msg: "Token is not valid" });
     }
 }
+``

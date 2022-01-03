@@ -46,3 +46,7 @@ export interface IUserProfile {
 export interface ICreateProfileRequest extends express.Request {
     user: IUserProfile;
 }
+
+export interface IGetProfileByUserIdRequest extends express.Request {
+    user: IUserProfile;
+}

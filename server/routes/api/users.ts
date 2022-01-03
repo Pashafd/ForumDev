@@ -5,7 +5,7 @@ import gravatar from "gravatar";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import config from "config";
-import { IUserRegistrationRequest } from "../../types/usersTypes";
+import { IUserInfo } from "../../types/usersTypes";
 
 const router = express.Router();
 
@@ -21,7 +21,7 @@ router.post(
             min: 6,
         }),
     ],
-    async (req: express.Request<any, () => void, IUserRegistrationRequest>, res: express.Response) => {
+    async (req: express.Request<any, () => void, IUserInfo>, res: express.Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
