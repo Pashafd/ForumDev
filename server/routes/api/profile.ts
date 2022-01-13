@@ -1,18 +1,17 @@
 import { validationResult, check } from "express-validator";
 import express from "express";
 import auth from "../../middleware/auth";
-
 import { Profile } from "../../models/Profile";
-import { ICreateProfileRequest, IGetProfileByUserIdRequest } from "../../types/profileTypes";
 import { User } from "../../models/User";
-import { IDeleteProfileRequest, IGetMyProfileRequest } from "../../types/usersTypes";
+import { IRequestWithUser } from "../../types/types";
+import { IRequestDeleteExperience, IUserProfileExperience } from "../../types/profileTypes";
 
 const router = express.Router();
 
 // @route       GET api/profile/me
 // @desc        Get current users profile
 // @access      Private
-router.get("/me", auth, async (req: IGetMyProfileRequest, res: express.Response) => {
+router.get("/me", auth, async (req: IRequestWithUser, res: express.Response) => {
     try {
         const profile = await Profile.findOne({ user: req.user.id }).populate("user", ["name", "avatar"]);
 
@@ -33,7 +32,7 @@ router.get("/me", auth, async (req: IGetMyProfileRequest, res: express.Response)
 router.post(
     "/",
     [auth, check("status", "Status is required").not().isEmpty(), check("skills", "Skills is required").not().isEmpty()],
-    async (req: ICreateProfileRequest, res: express.Response) => {
+    async (req: IRequestWithUser, res: express.Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -95,7 +94,7 @@ router.get("/", auth, async (req: express.Request, res: express.Response) => {
 // @route       POST api/profile/user/:user-id
 // @desc        Get user profile by user-id
 // @access      Private
-router.post("/user", auth, async (req: IGetProfileByUserIdRequest, res: express.Response) => {
+router.post("/user", auth, async (req: IRequestWithUser, res: express.Response) => {
     try {
         const profile = await Profile.findById(req.body.userId).populate("user", ["name", "avatar"]);
 
@@ -118,7 +117,7 @@ router.post("/user", auth, async (req: IGetProfileByUserIdRequest, res: express.
 // @route       DELETE api/profile
 // @desc        Delete users and profile
 // @access      Private
-router.delete("/", auth, async (req: IDeleteProfileRequest, res: express.Response) => {
+router.delete("/", auth, async (req: IRequestWithUser, res: express.Response) => {
     try {
         await Profile.findByIdAndRemove(req.user.id);
         await User.findByIdAndRemove(req.user.id);
@@ -129,5 +128,71 @@ router.delete("/", auth, async (req: IDeleteProfileRequest, res: express.Respons
         res.status(500).send("server error");
     }
 });
+
+// @route       PUT api/profile/experience
+// @desc        Add profile experience
+// @access      Private
+router.put(
+    "/experience",
+    [
+        auth,
+        check("title", "title is required").not().isEmpty(),
+        check("company", "company is required").not().isEmpty(),
+        check("from", "From date is required").not().isEmpty(),
+    ],
+    async (req: IRequestWithUser, res: express.Response) => {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            res.status(400).json({ errors: errors.array() });
+        }
+
+        const { title, company, from, to, current, description, location, id } = req.body;
+
+        const newExp = { title, company, location, from, to, current, description, id };
+
+        try {
+            const profile = await Profile.findOne({ user: req.user.id });
+
+            profile.experience.unshift(newExp);
+
+            await profile.save();
+
+            res.json(profile);
+        } catch (err) {
+            console.error(err.message, "error when add profile experience");
+            res.status(500).send("Server error");
+        }
+    }
+);
+
+
+// @route       POST api/profile/experience
+// @desc        Delete profile experience
+// @access      Private
+router.delete(
+    "/experience",
+    [auth, check("experienceId", "id is required").not().isEmpty()],
+    async (req: IRequestDeleteExperience, res: express.Response) => {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            res.status(400).json({ errors: errors.array() });
+        }
+
+        try {
+            const profile = await Profile.findOne({ user: req.user.id });
+
+            profile.experience = profile.experience.filter((exp: IUserProfileExperience) => exp.id !== req.body.experienceId);
+
+            await profile.save();
+
+            res.json(profile);
+        } catch (err) {
+            console.error(err.message, "error when deleting profile experience");
+            res.status(500).send("Server error");
+        }
+    }
+);
 
 module.exports = router;

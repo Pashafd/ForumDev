@@ -1,4 +1,4 @@
-import express from "express";
+import { IRequestWithUser } from "./types";
 
 export interface IUserProfileEducation {
     school: string;
@@ -18,6 +18,7 @@ export interface IUserProfileExperience {
     to?: Date;
     current?: boolean;
     description?: string;
+    id: string;
 }
 
 export interface IUserProfileSocial {
@@ -43,10 +44,6 @@ export interface IUserProfile {
     id?: number;
 }
 
-export interface ICreateProfileRequest extends express.Request {
-    user: IUserProfile;
-}
-
-export interface IGetProfileByUserIdRequest extends express.Request {
-    user: IUserProfile;
+export interface IRequestDeleteExperience extends IRequestWithUser {
+    experienceId: string;
 }

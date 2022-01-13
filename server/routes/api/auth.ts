@@ -6,14 +6,14 @@ import jwt from "jsonwebtoken";
 import auth from "../../middleware/auth";
 import { IUserInfo } from "../../types/usersTypes";
 import { User } from "../../models/User";
-import { IAuthRequest } from "../../types/authTypes";
+import { IRequestWithUser } from "../../types/types";
 
 const router = express.Router();
 
 // @route       GET api/auth
 // @desc        Test route
 // @access      public
-router.get("/", auth, async (req: IAuthRequest, res: express.Response) => {
+router.get("/", auth, async (req: IRequestWithUser, res: express.Response) => {
     try {
         const user = await User.findById(req.user.id).select("-password");
         res.json(user);
@@ -29,7 +29,7 @@ router.get("/", auth, async (req: IAuthRequest, res: express.Response) => {
 router.post(
     "/",
     [check("email", "Please included a valid email").isEmail(), check("password", "Password is requeued").isString().exists()],
-    async (req: IAuthRequest, res: express.Response) => {
+    async (req: IRequestWithUser, res: express.Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
