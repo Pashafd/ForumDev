@@ -4,7 +4,16 @@ import auth from "../../middleware/auth";
 import { Profile } from "../../models/Profile";
 import { User } from "../../models/User";
 import { IRequestWithUser } from "../../types/types";
-import { IRequestDeleteExperience, IUserProfileExperience } from "../../types/profileTypes";
+import {
+    IProfileCreateRequest,
+    IRequestDeleteExperience,
+    IUserProfile,
+    IUserProfileEducation,
+    IUserProfileExperience,
+} from "../../types/profileTypes";
+import { HydratedDocument } from "mongoose";
+import request from "request";
+import config from "config";
 
 const router = express.Router();
 
@@ -31,7 +40,7 @@ router.get("/me", auth, async (req: IRequestWithUser, res: express.Response) => 
 // @access      Private
 router.post(
     "/",
-    [auth, check("status", "Status is required").not().isEmpty(), check("skills", "Skills is required").not().isEmpty()],
+    [auth, check("status", "status is required").not().isEmpty(), check("skills", "Skills is required").not().isEmpty()],
     async (req: IRequestWithUser, res: express.Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -45,15 +54,10 @@ router.post(
         const reqKeys = Object.keys(req.body);
 
         reqKeys.forEach((key) => {
-            switch (true) {
-                case key === "skills": {
-                    profileFields.skills = req.body.skills.split(",").map((x: string) => x.trim());
-                    break;
-                }
-                case req.body[key] !== null && req.body[key] !== undefined: {
-                    profileFields[key] = req.body[key];
-                    break;
-                }
+            if (key === "skills") {
+                profileFields.skills = req.body.skills.split(",").map((x: string) => x.trim());
+            } else if (req.body[key] !== null && req.body[key] !== undefined) {
+                profileFields[key] = req.body[key];
             }
         });
 
@@ -140,7 +144,7 @@ router.put(
         check("company", "company is required").not().isEmpty(),
         check("from", "From date is required").not().isEmpty(),
     ],
-    async (req: IRequestWithUser, res: express.Response) => {
+    async (req: IProfileCreateRequest, res: express.Response) => {
         const errors = validationResult(req);
 
         if (!errors.isEmpty()) {
@@ -152,7 +156,17 @@ router.put(
         const newExp = { title, company, location, from, to, current, description, id };
 
         try {
-            const profile = await Profile.findOne({ user: req.user.id });
+            const profile: HydratedDocument<IUserProfile> = await Profile.findOne({ user: req.user.id });
+
+            if (req.body.current) {
+                const currentExistInList = profile.experience.some((field) => !!field.current);
+
+                if (currentExistInList) {
+                    res.status(400).json({
+                        msg: "current field must be unique, please delete one of the experience with current: true field",
+                    });
+                }
+            }
 
             profile.experience.unshift(newExp);
 
@@ -160,15 +174,14 @@ router.put(
 
             res.json(profile);
         } catch (err) {
-            console.error(err.message, "error when add profile experience");
+            console.error(err.message, "error when add profile education");
             res.status(500).send("Server error");
         }
     }
 );
 
-
-// @route       POST api/profile/experience
-// @desc        Delete profile experience
+// @route       DELETE api/profile/education
+// @desc        Delete profile education from profile
 // @access      Private
 router.delete(
     "/experience",
@@ -194,5 +207,114 @@ router.delete(
         }
     }
 );
+
+export interface IEducationRequest extends IRequestWithUser {
+    education: IUserProfileEducation;
+}
+
+// @route       PUT api/profile/education
+// @desc        Add profile education
+// @access      Private
+router.put(
+    "/education",
+    [
+        auth,
+        check("school", "school is required").not().isEmpty(),
+        check("fieldofstudy", "fieldofstudy is required").not().isEmpty(),
+        check("from", "From date is required").not().isEmpty(),
+        check("degree", "Degree is required").not().isEmpty(),
+    ],
+    async (req: IEducationRequest, res: express.Response) => {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            res.status(400).json({ errors: errors.array() });
+        }
+
+        const { school, fieldofstudy, from, to, current, description, degree, id } = req.body;
+
+        const newEducation = { school, fieldofstudy, from, to, current, description, degree, id };
+
+        try {
+            const profile: HydratedDocument<IUserProfile> = await Profile.findOne({ user: req.user.id });
+
+            if (req.body.current) {
+                const currentExistInList = profile.education.some((field) => !!field.current);
+
+                if (currentExistInList) {
+                    res.status(400).json({
+                        msg: "current field must be unique, please delete one of the education with current: true field",
+                    });
+                }
+            }
+
+            profile.education.unshift(newEducation);
+
+            await profile.save();
+
+            res.json(profile);
+        } catch (err) {
+            console.error(err.message, "error when add profile education");
+            res.status(500).send("Server error");
+        }
+    }
+);
+
+// @route       DELETE api/profile/education
+// @desc        Delete profile education from profile
+// @access      Private
+router.delete(
+    "/education",
+    [auth, check("educationId", "id is required").not().isEmpty()],
+    async (req: IEducationRequest, res: express.Response) => {
+        const errors = validationResult(req);
+
+        if (!errors.isEmpty()) {
+            res.status(400).json({ errors: errors.array() });
+        }
+
+        try {
+            const profile = await Profile.findOne({ user: req.user.id });
+
+            profile.education = profile.education.filter((exp: IUserProfileEducation) => exp.id !== req.body.educationId);
+
+            await profile.save();
+
+            res.json(profile);
+        } catch (err) {
+            console.error(err.message, "error when deleting profile education");
+            res.status(500).send("Server error");
+        }
+    }
+);
+
+// @route       GET api/profile/github/:username
+// @desc        get user repos from github
+// @access      Public
+router.get("/github/:username", async (req: IRequestWithUser, res: express.Response) => {
+    try {
+        const options = {
+            uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=created:asc&client_id=${config.get(
+                "githubClientId"
+            )}&client_secret=${config.get("githubSecret")}`,
+            headers: { "user-agent": "Mozilla/5.0" },
+        };
+
+        request(options, (error, response, body) => {
+            if (error) {
+                console.error(error);
+            }
+
+            if (response.statusCode === 200) {
+                res.json(JSON.parse(body));
+            } else {
+                res.status(404).json({ msg: "no github profile found" });
+            }
+        });
+    } catch (err) {
+        console.error(err.message, "error when get users repos from github");
+        res.status(500).send("server error");
+    }
+});
 
 module.exports = router;

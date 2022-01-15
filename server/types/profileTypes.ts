@@ -8,6 +8,7 @@ export interface IUserProfileEducation {
     to: Date;
     current?: boolean;
     description?: string;
+    id: string;
 }
 
 export interface IUserProfileExperience {
@@ -46,4 +47,8 @@ export interface IUserProfile {
 
 export interface IRequestDeleteExperience extends IRequestWithUser {
     experienceId: string;
+}
+
+export interface IProfileCreateRequest extends IRequestWithUser {
+    body: IUserProfileExperience;
 }

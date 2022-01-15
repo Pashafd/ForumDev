@@ -1,4 +1,6 @@
 {
     "mongoURI": "mongodb+srv://Pashafd:TX4c4amjpA5UQY5@forumdev.vcdem.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-    "jwtToken": "superSecretToken1408"
+    "jwtToken": "superSecretToken1408",
+    "githubClientId": "748f48e52af7b1f6ed52",
+    "githubSecret": "dfef0d9c2bebe460ff0a48f76fbe72380d3ea58a"
 }
