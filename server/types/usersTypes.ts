@@ -3,4 +3,5 @@ export interface IUserInfo {
     email: string;
     password: string;
     id?: number;
+    avatar?: string;
 }

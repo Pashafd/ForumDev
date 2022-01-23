@@ -289,15 +289,15 @@ router.delete(
 );
 
 // @route       GET api/profile/github/:username
-// @desc        get user repos from github
+// @desc        get sorted user repos from github
 // @access      Public
 router.get("/github/:username", async (req: IRequestWithUser, res: express.Response) => {
     try {
         const options = {
-            uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=created:asc&client_id=${config.get(
-                "githubClientId"
-            )}&client_secret=${config.get("githubSecret")}`,
-            headers: { "user-agent": "Mozilla/5.0" },
+            uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=${req.params.sortBy || "created"}:${
+                req.params.sort || 0 ? "asc" : "desc"
+            }&client_id=${config.get("githubClientId")}&client_secret=${config.get("githubSecret")}`,
+            headers: { "user-agent": "nodejs" },
         };
 
         request(options, (error, response, body) => {
@@ -305,10 +305,10 @@ router.get("/github/:username", async (req: IRequestWithUser, res: express.Respo
                 console.error(error);
             }
 
-            if (response.statusCode === 200) {
-                res.json(JSON.parse(body));
+            if (response.statusCode !== 200) {
+                res.status(404).json({ msg: "No github profile found" });
             } else {
-                res.status(404).json({ msg: "no github profile found" });
+                res.json(JSON.parse(body));
             }
         });
     } catch (err) {
