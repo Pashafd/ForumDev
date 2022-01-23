@@ -2,7 +2,6 @@ import express from "express";
 import { check, validationResult } from "express-validator";
 import auth from "../../middleware/auth";
 import { Post } from "../../models/Post";
-import { Profile } from "../../models/profile";
 import { User } from "../../models/User";
 import { IRequestWithUser } from "../../types/types";
 import { IUserInfo } from "../../types/usersTypes";

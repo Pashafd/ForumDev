@@ -95,28 +95,38 @@ router.get("/", auth, async (req: express.Request, res: express.Response) => {
     }
 });
 
-// @route       POST api/profile/user/:user-id
+// @route       POST api/profile/user
 // @desc        Get user profile by user-id
 // @access      Private
-router.post("/user", auth, async (req: IRequestWithUser, res: express.Response) => {
-    try {
-        const profile = await Profile.findById(req.body.userId).populate("user", ["name", "avatar"]);
+router.post(
+    "/user",
+    [auth, check("userId", "userId is required").not().isEmpty()],
+    async (req: IRequestWithUser, res: express.Response) => {
+        const errors = validationResult(req);
 
-        if (!profile) {
-            return res.status(400).json({ msg: "Profile is not created for this user" });
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
         }
 
-        res.json(profile);
-    } catch (err) {
-        console.error(err.message, "error when get profile");
+        try {
+            const profile = await Profile.findById(req.body.userId).populate("user", ["name", "avatar"]);
 
-        if (err.kind === "ObjectId") {
-            return res.status(400).json({ msg: "User is not exist" });
+            if (!profile) {
+                return res.status(400).json({ msg: "Profile is not created for this user" });
+            }
+
+            res.json(profile);
+        } catch (err) {
+            console.error(err.message, "error when get profile");
+
+            if (err.kind === "ObjectId") {
+                return res.status(400).json({ msg: "User is not exist" });
+            }
+
+            res.status(500).send("server error");
         }
-
-        res.status(500).send("server error");
     }
-});
+);
 
 // @route       DELETE api/profile
 // @desc        Delete users and profile
@@ -294,9 +304,11 @@ router.delete(
 router.get("/github/:username", async (req: IRequestWithUser, res: express.Response) => {
     try {
         const options = {
-            uri: `https://api.github.com/users/${req.params.username}/repos?per_page=5&sort=${req.params.sortBy || "created"}:${
-                req.params.sort || 0 ? "asc" : "desc"
-            }&client_id=${config.get("githubClientId")}&client_secret=${config.get("githubSecret")}`,
+            uri: `https://api.github.com/users/${req.params.username}/repos?per_page=${req.params.perPage || 5}&sort=${
+                req.params.sortBy || "created"
+            }:${req.params.sort || 0 ? "asc" : "desc"}&client_id=${config.get("githubClientId")}&client_secret=${config.get(
+                "githubSecret"
+            )}`,
             headers: { "user-agent": "nodejs" },
         };
 
